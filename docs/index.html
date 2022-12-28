@@ -71,7 +71,7 @@
         event.preventDefault();
         document.getElementById('response').innerHTML = '<div class="row text-center">Waiting for the response...</div>';
         const formData = new FormData(event.target);
-        fetch('http://crosscheck.herokuapp.com/api/crosscheck', {
+        fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
           method: 'POST',
           body: formData
         })
