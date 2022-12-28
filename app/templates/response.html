@@ -1,0 +1,33 @@
+<table id="dataTable" class="table table-striped w-100">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Year</th>
+            <th>Citations</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for paper in paper_data %}
+            <tr>
+                <td>
+                    <a href="{{ paper['url'] }}" class="text-reset">
+                        {{ paper['title'] }}
+                    </a>
+                    {% if paper['authors'] %}
+                        <br/><small class="text-secondary">{{ paper['authors'] }}</small>
+                    {% endif %}
+                    {% if paper['journal'] %}
+                        &nbsp;<small class="text-secondary">&#8226;</small>&nbsp;
+                        <small class="text-secondary">{{ paper['journal'] }}</small>
+                    {% endif %}
+                </td>
+                <td>
+                    {{ paper['year'] }}
+                </td>
+                <td>
+                    {{ paper['citationCount'] }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
