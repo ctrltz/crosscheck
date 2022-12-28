@@ -1,5 +1,4 @@
 import networkx as nx
-import pandas as pd
 import requests
 
 
@@ -109,7 +108,5 @@ def crosscheck(groups):
     crosschecked_data = [dict(paperId=n[0], **n[1]) 
                          for n in graph.nodes(data=True)
                          if n[0] in crosschecked]
-
-    # print(crosschecked_data[:10])
 
     return crosschecked_data
