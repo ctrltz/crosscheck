@@ -18,7 +18,7 @@
       </div>
 
       <!-- Form -->
-      <form class="needs-validation" id="form" method="post" novalidate>
+      <form class="row needs-validation" id="form" method="post" novalidate>
         <div class="row">
           <div class="col-md-6 mt-3">
             <div class="form-floating">
@@ -42,11 +42,17 @@
 
         <div class="row justify-content-center mt-3">
           <div class="col-md-3">
-            <button type="submit" class="btn btn-primary mb-3 w-100">Submit</button>
+            <button id="submitButton" type="submit" class="btn btn-primary mb-3 w-100">
+              <span id="spinner" class="spinner-grow spinner-grow-sm visually-hidden" role="status" aria-hidden="true"></span>
+              <span id="buttonText">Submit</span>
+            </button>
           </div>
         </div>
       </form>
-      
+
+      <!-- Warnings & Errors -->
+      <div class="row mt-3 visually-hidden" id="messages"></div>      
+
       <!-- Generated Response -->
       <div class="row mt-3" id="response"></div>
     </div>
@@ -57,31 +63,106 @@
 
     <script>
       let form = document.getElementById('form');
+      let button = document.getElementById('submitButton');
+      let spinner = document.getElementById('spinner'); 
+      let buttonText = document.getElementById('buttonText');
+      let messageDiv = document.getElementById('messages');
+      let responseDiv = document.getElementById('response');
+
+      const classHidden = 'visually-hidden';
+      const alertCloseButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+
+      function buttonReady() {
+        button.disabled = false;
+        spinner.classList.add(classHidden);
+        buttonText.innerText = 'Submit';
+      }
+
+      function buttonBusy() {
+        button.disabled = true;
+        spinner.classList.remove(classHidden);
+        buttonText.innerText = 'Waiting for response...'
+      }
+
+      function describe(type, message) {
+        var div = document.createElement("div");
+        div.setAttribute('role', 'alert');
+        div.classList.add('alert');
+        switch (type) {
+          case 'error':
+            div.classList.add("alert-danger");            
+            div.innerHTML = `<strong>Error:</strong>&nbsp;${message}\n${alertCloseButton}`;
+            break;
+        
+          case 'warning':
+            div.classList.add("alert-warning");
+            div.innerHTML = `<strong>Warning:</strong>&nbsp;${message}\n${alertCloseButton}`;
+            break;
+
+          default:
+            console.log(`Unexpected alert type: ${type}`);
+            break;
+        }
+
+        div.classList.add('alert-dismissible', 'fade', 'show');
+
+        return div;
+      }
+
+      function appendMessage(type, message) {
+        messageDiv.classList.remove(classHidden);
+        messageDiv.append(describe(type, message));
+      }
+
+      function cleanMessages() {
+        messageDiv.replaceChildren();
+      }
+
       form.addEventListener('submit', function(event) {
+        // Disable the button
+        buttonBusy();
+
+        // Clean the error log
+        cleanMessages();
+
         // Validation
         isValid = form.checkValidity();
         form.classList.add('was-validated');
         if (!isValid) {
           event.preventDefault();
           event.stopPropagation();
+          buttonReady();
           return;
         }
 
         // Fetch & wait for response
         event.preventDefault();
-        document.getElementById('response').innerHTML = '<div class="row text-center">Waiting for the response...</div>';
         const formData = new FormData(event.target);
         fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
           method: 'POST',
           body: formData
         })
-        .then(response => response.text())
         .then(response => {
-          document.getElementById('response').innerHTML = response;
+          if (!response.ok) {
+            throw new Error('Failed due to network error');
+          }
+          return response.text();
+        })
+        .then(response => {
+          responseDiv.innerHTML = response;
           $('#dataTable').DataTable( {
             pageLength: 25,
             order: [[2, 'desc']],
           });
+
+          // Enable button
+          buttonReady();
+        })
+        .catch((error) => {
+          appendMessage('error', error.message);
+
+          // Enable button
+          buttonReady();
         });
       });
     </script>
