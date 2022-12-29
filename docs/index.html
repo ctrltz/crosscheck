@@ -21,18 +21,18 @@
       <form class="needs-validation" id="form" method="post" novalidate>
         <div class="row">
           <div class="col-md-6 mt-3">
-            <div class="form-floating">
+            <div>
+              <label class="w-100 text-center text-secondary" for="floatingTextarea">Group 1</label>
               <textarea class="form-control" name="group1" autocomplete="on" placeholder="Enter 1 DOI per line" id="floatingTextarea" style="height: 100px;" required></textarea>
-              <label for="floatingTextarea">Group 1</label>
               <div class="invalid-feedback">
                 List of DOIs should not be empty
               </div>
             </div>
           </div>
           <div class="col-md-6 mt-3">
-            <div class="form-floating">
+            <div>
+              <label class="w-100 text-center text-secondary" for="floatingTextarea2">Group 2</label>
               <textarea class="form-control" name="group2" autocomplete="on" placeholder="Enter 1 DOI per line" id="floatingTextarea2" style="height: 100px;" required></textarea>
-              <label for="floatingTextarea2">Group 2</label>
               <div class="invalid-feedback">
                 List of DOIs should not be empty
               </div>
@@ -40,11 +40,21 @@
           </div>
         </div>
 
-        <div class="row justify-content-center mt-3">
+        <div class="row justify-content-between mt-3">
+          <div class="col-md-auto">
+            <button type="button" class="btn btn-link text-reset" data-bs-toggle="modal" data-bs-target="#aboutModal">
+              About
+            </button>
+          </div>
           <div class="col-md-3">
             <button id="submitButton" type="submit" class="btn btn-primary mb-3 w-100">
               <span id="spinner" class="spinner-grow spinner-grow-sm visually-hidden" role="status" aria-hidden="true"></span>
               <span id="buttonText">Submit</span>
+            </button>
+          </div>
+          <div class="col-md-auto">
+            <button type="button" class="btn btn-link text-reset" data-bs-toggle="modal" data-bs-target="#historyModal" disabled>
+              History
             </button>
           </div>
         </div>
@@ -55,6 +65,30 @@
 
       <!-- Generated Response -->
       <div class="mt-3" id="response"></div>
+    </div>
+
+    <!-- About Modal -->
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="aboutModalLabel">About</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>
+              The idea behind <strong>crosscheck</strong> is to find scientific papers that are based upon two concepts.
+              One of the ways to describe a concept is to select several papers that are quite likely to be cited in a paper that discusses this concept.
+              Of course, this approach may not work for all use cases, but it should be suitable for methods & seminal works at least.
+            </p> 
+
+            <h4>Usage</h4>
+            <p>
+              TODO
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
