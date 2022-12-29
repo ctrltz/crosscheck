@@ -1,10 +1,11 @@
+# TODO: enable celery
 from celery import Celery
 from flask import Flask, request, make_response
 
 from app.tasks import analyse
 
 def create_app():
-    # create and configure the app
+    # Create and configure the app
     app = Flask(__name__)
     app.config.from_mapping(
         SECRET_KEY='dev',
@@ -19,12 +20,16 @@ def create_app():
     # from app.tasks import tasks
     # tasks.init_app(app)
 
-    # a simple page that says hello
+    # TODO: progress endpoint for a specific job
+
+    # Main endpoint for initiating a request
     @app.route('/api/crosscheck', methods=['GET', 'POST'])
     def crosscheck():
         if request.method == 'POST':
             # Handle form submission
             form_data = request.form
+            # TODO: run the task asynchronously and return job id
+            # TODO: change response code if an error occurred
             response = make_response(analyse(form_data))
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response

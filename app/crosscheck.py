@@ -9,9 +9,15 @@ CITATIONS_URL = 'https://api.semanticscholar.org/graph/v1/paper/{0}/citations?fi
 CITATIONS_FIELDS = 'paperId,url,title,citationCount,authors,journal,year'
 MAX_LIMIT = 1000
 MAX_TOTAL_COUNT = 10000
+# TODO: think about overall limits on the amount of papers to be processed
+
+
+class EmptyGroupError(Exception):
+    pass
 
 
 def get_paper_data(doi, fields):
+    # TODO: handle situation if API is not available or paper is not found
     return requests.get(PAPER_URL.format(doi, fields)).json()
 
 
@@ -51,6 +57,7 @@ def build_graph(groups):
             paper_data = get_paper_data(paper_doi, PAPER_CITATION_FIELDS)
             paper_id = paper_data.get('paperId', None)
             if not paper_id:
+                # TODO: add a warning
                 print(f'Failed to find paper: {paper_doi}')
                 continue
 
@@ -64,6 +71,7 @@ def build_graph(groups):
                 citations.extend([cit['citingPaper'] for cit in new_citations.get('data', [])])
                 num_cit_retrieved = new_citations.get('next', None)
                 if num_cit_retrieved:
+                    # TODO: change to warning / debug?
                     assert len(citations) == num_cit_retrieved, paper_doi
                 else:
                     assert len(citations) == num_cit_total, paper_doi
@@ -94,19 +102,44 @@ def build_graph(groups):
     return graph, node_groups
 
 
-def crosscheck(groups):
-    # Build the citation graph
-    graph, node_groups = build_graph(groups)
+def check_groups_not_empty(groups):
+    group_sizes = [len(g) for g in groups]
+    if 0 in group_sizes:
+        empty_group = group_sizes.index(0) + 1
+        raise EmptyGroupError(f'Group {empty_group} does not contain any papers')
 
-    # Find nodes that are reachable from both sets
+
+def get_crosschecked_nodes(graph, node_groups):
     crosschecked = set(graph.nodes)
     for group_nodes in node_groups:
         reachable = nx.bfs_layers(graph, group_nodes)
-        print(next(reachable))  # skip group nodes in layer 0
-        crosschecked &= set(next(reachable))
+        
+        # TODO: add test on when no papers are reachable from one of the groups
+        try:
+            print(next(reachable))  # skip group nodes in layer 0
+            crosschecked &= set(next(reachable))
+        except StopIteration:
+            # No papers are reachable from one of the groups
+            return []
+    return crosschecked
 
-    crosschecked_data = [dict(paperId=n[0], **n[1]) 
-                         for n in graph.nodes(data=True)
+
+def crosscheck(groups):
+    # Throw an error if one of the groups is empty
+    # TODO: add test
+    check_groups_not_empty(groups)
+
+    # Build the citation graph
+    graph, node_groups = build_graph(groups)
+
+    # Throw an error if one of the groups is empty after paper retrieval
+    # TODO: add test
+    check_groups_not_empty(node_groups)
+
+    # Find nodes that are reachable from both sets
+    crosschecked = get_crosschecked_nodes(graph, node_groups)
+
+    crosschecked_data = [n for n in graph.nodes(data=True)
                          if n[0] in crosschecked]
 
     return crosschecked_data
