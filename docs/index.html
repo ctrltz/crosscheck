@@ -18,7 +18,7 @@
       </div>
 
       <!-- Form -->
-      <form class="row needs-validation" id="form" method="post" novalidate>
+      <form class="needs-validation" id="form" method="post" novalidate>
         <div class="row">
           <div class="col-md-6 mt-3">
             <div class="form-floating">
@@ -51,10 +51,10 @@
       </form>
 
       <!-- Warnings & Errors -->
-      <div class="row mt-3 visually-hidden" id="messages"></div>      
+      <div class="mt-3 visually-hidden" id="messages"></div>      
 
       <!-- Generated Response -->
-      <div class="row mt-3" id="response"></div>
+      <div class="mt-3" id="response"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.3.min.js" integrity="sha256-pvPw+upLPUjgMXY0G+8O0xUf+/Im1MZjXxxgOcBQBXU=" crossorigin="anonymous"></script>
@@ -91,12 +91,12 @@
         switch (type) {
           case 'error':
             div.classList.add("alert-danger");            
-            div.innerHTML = `<strong>Error:</strong>&nbsp;${message}\n${alertCloseButton}`;
+            div.innerHTML = `<strong>Error:</strong>&nbsp;<span>${message}</span>\n${alertCloseButton}`;
             break;
         
           case 'warning':
             div.classList.add("alert-warning");
-            div.innerHTML = `<strong>Warning:</strong>&nbsp;${message}\n${alertCloseButton}`;
+            div.innerHTML = `<strong>Warning:</strong>&nbsp;<span>${message}</span>\n${alertCloseButton}`;
             break;
 
           default:
@@ -142,12 +142,7 @@
           method: 'POST',
           body: formData
         })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Failed due to network error');
-          }
-          return response.text();
-        })
+        .then(response => response.text())
         .then(response => {
           responseDiv.innerHTML = response;
           $('#dataTable').DataTable( {
@@ -159,7 +154,7 @@
           buttonReady();
         })
         .catch((error) => {
-          appendMessage('error', error.message);
+          appendMessage('error', 'Failed due to a network error');
 
           // Enable button
           buttonReady();
