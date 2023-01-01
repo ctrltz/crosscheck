@@ -71,10 +71,10 @@ def build_graph(groups):
                 continue
 
             citations = paper_data.get('citations', [])
-            num_cit_actual = len(citations)
+            num_cit_expected = len(citations)
             num_cit_total = paper_data['citationCount']
             print(paper_doi)
-            print(f'Retrieved {num_cit_actual} / {num_cit_total} citations')
+            print(f'Retrieved {num_cit_expected} / {num_cit_total} citations')
             while num_cit_expected < num_cit_total:
                 new_citations = get_citation_data(paper_doi, CITATIONS_FIELDS, num_cit_retrieved)
                 citations.extend([cit['citingPaper'] for cit in new_citations.get('data', [])])
@@ -146,7 +146,8 @@ def crosscheck(groups):
     # Find nodes that are reachable from both sets
     crosschecked = get_crosschecked_nodes(graph, node_groups)
 
-    crosschecked_data = [n for n in graph.nodes(data=True)
+    crosschecked_data = [dict(paperId=n[0], **n[1])
+                         for n in graph.nodes(data=True)
                          if n[0] in crosschecked]
 
     return crosschecked_data

@@ -31,6 +31,7 @@ def analyse(form_data):
             result['error'] = {'message': str(e), 'category': 'EmptyGroupError'}
         except Exception as e:
             # Wrap unprocessed exceptions
+            print(str(e))
             result['error'] = {'message': [], 'category': 'ServerError'}
 
         # Add warnings that occurred along the way
@@ -41,8 +42,5 @@ def analyse(form_data):
             else:
                 print(f'Unhandled warning: {str(w)}')
         result['messages'] = messages
-    
-    print(return_code)
-    print(result)
 
     return result, return_code
