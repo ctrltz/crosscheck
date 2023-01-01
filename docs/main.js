@@ -68,16 +68,15 @@ function appendMessage(type, message) {
     messageDiv.append(constructMessageDiv(type, message));
 }
 
-function cleanMessages() {
-    messageDiv.replaceChildren();
-}
-
 function submitForm(event) {
     // Disable the button
     buttonBusy();
 
-    // Clean the error log
-    cleanMessages();
+    // Clear the error log
+    messageDiv.replaceChildren();
+
+    // Clear the results
+    responseDiv.replaceChildren();
 
     // Validation
     isValid = form.checkValidity();
