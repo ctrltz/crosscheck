@@ -1,5 +1,6 @@
 import networkx as nx
 import requests
+import warnings
 
 
 PAPER_URL = 'https://api.semanticscholar.org/graph/v1/paper/{0}?fields={1}'
@@ -13,6 +14,14 @@ MAX_TOTAL_COUNT = 10000
 
 
 class EmptyGroupError(Exception):
+    pass
+
+
+class PaperNotFoundWarning(Warning):
+    pass
+
+
+class CitationDiscrepancyWarning(Warning):
     pass
 
 
@@ -50,6 +59,7 @@ def journal_compact(journal):
 def build_graph(groups):
     graph = nx.DiGraph()
     node_groups = []
+
     for group_papers in groups:
         nodes = []
         for paper_doi in group_papers:
@@ -57,26 +67,23 @@ def build_graph(groups):
             paper_data = get_paper_data(paper_doi, PAPER_CITATION_FIELDS)
             paper_id = paper_data.get('paperId', None)
             if not paper_id:
-                # TODO: add a warning
-                print(f'Failed to find paper: {paper_doi}')
+                warnings.warn(paper_doi, PaperNotFoundWarning)
                 continue
 
             citations = paper_data.get('citations', [])
-            num_cit_retrieved = len(citations)
+            num_cit_actual = len(citations)
             num_cit_total = paper_data['citationCount']
             print(paper_doi)
-            print(f'Retrieved {num_cit_retrieved} / {num_cit_total} citations')
-            while num_cit_retrieved < num_cit_total:
+            print(f'Retrieved {num_cit_actual} / {num_cit_total} citations')
+            while num_cit_expected < num_cit_total:
                 new_citations = get_citation_data(paper_doi, CITATIONS_FIELDS, num_cit_retrieved)
                 citations.extend([cit['citingPaper'] for cit in new_citations.get('data', [])])
                 num_cit_retrieved = new_citations.get('next', None)
-                if num_cit_retrieved:
-                    # TODO: change to warning / debug?
-                    assert len(citations) == num_cit_retrieved, paper_doi
-                else:
-                    assert len(citations) == num_cit_total, paper_doi
-                    num_cit_retrieved = num_cit_total
-                print(f'Retrieved {num_cit_retrieved} / {num_cit_total} citations')
+                num_cit_expected = num_cit_retrieved or num_cit_total
+                num_cit_actual = len(citations)
+                if num_cit_actual != num_cit_expected:
+                    warnings.warn(paper_doi, CitationDiscrepancyWarning)
+                print(f'Retrieved {num_cit_actual} / {num_cit_total} citations')
 
             # Add reversed edges to the graph for BFS
             citation_nodes = [(cit['paperId'], 
@@ -106,7 +113,7 @@ def check_groups_not_empty(groups):
     group_sizes = [len(g) for g in groups]
     if 0 in group_sizes:
         empty_group = group_sizes.index(0) + 1
-        raise EmptyGroupError(f'Group {empty_group} does not contain any papers')
+        raise EmptyGroupError(empty_group)
 
 
 def get_crosschecked_nodes(graph, node_groups):

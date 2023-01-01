@@ -29,8 +29,8 @@ def create_app():
             # Handle form submission
             form_data = request.form
             # TODO: run the task asynchronously and return job id
-            # TODO: change response code if an error occurred
-            response = make_response(analyse(form_data))
+            result, return_code = analyse(form_data)
+            response = make_response(result, return_code)
             response.headers.add('Access-Control-Allow-Origin', '*')
             return response
         return {'message': 'API endpoint of crosscheck.'}

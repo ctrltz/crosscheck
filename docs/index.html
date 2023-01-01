@@ -95,6 +95,11 @@
             <p>
               TODO
             </p>
+            
+            <hr>
+            <p>
+              Icon by Feather
+            </p>
           </div>
         </div>
       </div>
@@ -181,7 +186,8 @@
         // Fetch & wait for response
         event.preventDefault();
         const formData = new FormData(event.target);
-        fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
+        // fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
+        fetch('http://crosscheck.app/api/crosscheck', {
           method: 'POST',
           body: formData
         })
