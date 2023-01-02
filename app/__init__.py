@@ -8,6 +8,7 @@ def create_app():
     # Create and configure the app
     app = Flask(__name__)
     app.config.from_mapping(
+        # TODO: get from env
         SECRET_KEY='dev',
         CELERY_BROKER_URL='redis://localhost:6379/0',
         CELERY_BACKEND_URL='redis://localhost:6379/0'

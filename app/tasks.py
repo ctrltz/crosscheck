@@ -5,13 +5,7 @@ from flask import render_template
 
 from app.crosscheck import (crosscheck, EmptyGroupError, 
     PaperNotFoundWarning, CitationDiscrepancyWarning)
-
-
-def extract_groups(form_data):
-    # TODO: refine supported ID types, throw error if one of the groups is empty
-    group1 = [el.strip() for el in form_data['group1'].split('\n')]
-    group2 = [el.strip() for el in form_data['group2'].split('\n')]
-    return [group1, group2]
+from app.preprocess import extract_groups
 
 
 # Define the Celery task
