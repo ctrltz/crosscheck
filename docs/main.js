@@ -1,9 +1,5 @@
 const classHidden = 'visually-hidden';
 const alertCloseButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
-const dtParams = {
-    pageLength: 25,
-    order: [[2, 'desc']],
-};
 
 function describe(msg) {
     switch (msg.category) {
@@ -105,6 +101,31 @@ function initSearchHistoryTable() {
     return table;
 }
 
+function initResultsTable() {
+    // Initialize the table with DataTables
+    return $('#dataTable').DataTable({
+        // Use the array of objects as the data source for the table
+        "data": [],
+        // Define the columns of the table
+        "columns": [
+            {
+                // The 'Title' column displays the title, authors, and journal in separate elements
+                "data": "title",
+                "render": function(data, type, row) {
+                    var authors = row.authors ? `<br/><small class="text-secondary">${row.authors}</small>` : "";
+                    var journal = row.journal ? `&nbsp;<small class="text-secondary">&#8226;</small>&nbsp;<small class="text-secondary">${row.journal}</small>` : "";
+                    return `<a href="${row.url}" class="text-reset">${row.title}</a>${authors}${journal}`;
+                }
+            },
+            { "data": "year" },
+            { "data": "citationCount" }
+        ],
+        // Other options and settings
+        "pageLength": 25,
+        "order": [[2, 'desc']]
+    });
+}
+
 $(document).ready(function() {
     let form = document.getElementById('form');
     let button = document.getElementById('submitButton');
@@ -112,6 +133,9 @@ $(document).ready(function() {
     let buttonText = document.getElementById('buttonText');
     let messageDiv = document.getElementById('messages');
     let responseDiv = document.getElementById('response');
+
+    // Initialize the results table
+    let resultsTable = initResultsTable();
 
     // Enable submit
     function buttonReady() {
@@ -142,7 +166,7 @@ $(document).ready(function() {
         messageDiv.replaceChildren();
     
         // Clear the results
-        responseDiv.replaceChildren();
+        resultsTable.clear().draw();
     
         // Validation
         isValid = form.checkValidity();
@@ -186,8 +210,9 @@ $(document).ready(function() {
     
             // Display data if present
             if ("data" in response) {
-                responseDiv.innerHTML = response.data;
-                $('#dataTable').DataTable( dtParams );
+                resultsTable.rows.add(response.data)
+                            .columns.adjust()
+                            .draw();
             }
         
             // Enable button

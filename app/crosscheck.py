@@ -150,4 +150,8 @@ def crosscheck(groups):
                          for n in graph.nodes(data=True)
                          if n[0] in crosschecked]
 
-    return crosschecked_data
+    source_data = [dict(paperId=n[0], **n[1])
+                   for n in graph.nodes(data=True)
+                   if any([n[0] in ng for ng in node_groups])]
+
+    return crosschecked_data, source_data

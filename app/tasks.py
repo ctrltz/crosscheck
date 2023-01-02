@@ -24,8 +24,9 @@ def analyse(form_data):
     with warnings.catch_warnings(record=True) as ws:
         # Run the analysis
         try:
-            data = crosscheck(groups)
-            result['data'] = render_template('response.html', paper_data=data)
+            data, source_papers = crosscheck(groups)
+            result['data'] = data
+            result['source'] = source_papers
             return_code = 200
         except EmptyGroupError as e:
             result['error'] = {'message': str(e), 'category': 'EmptyGroupError'}
