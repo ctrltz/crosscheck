@@ -56,23 +56,7 @@ function handleSelectedPapers(table, textareaId) {
     });
 }
 
-function initSearchHistoryTable() {
-    // Retrieve the object from local storage
-    let papers = JSON.parse(localStorage.getItem('papers'));
-
-    // Use an empty array as the default value
-    papers = papers || [];
-
-    // Convert the object to an array of objects
-    let data = Object.keys(papers).map(function(key) {
-        return {
-            title: papers[key].title,
-            year: papers[key].year,
-            citationCount: papers[key].citationCount,
-            paperId: papers[key].paperId
-        };
-    });
-
+function initSearchHistoryTable(data) {
     // Initialize the table with DataTables
     let table = $('#papersTable').DataTable({
         // Use the array of objects as the data source for the table
@@ -95,7 +79,8 @@ function initSearchHistoryTable() {
         // Other options and settings
         "paging": false,
         "ordering": false,
-        "info": false
+        "info": false,
+        "pageLength": 25
     });
 
     return table;
@@ -134,8 +119,27 @@ $(document).ready(function() {
     let messageDiv = document.getElementById('messages');
     let responseDiv = document.getElementById('response');
 
+    // Retrieve the object from local storage
+    let papers = JSON.parse(localStorage.getItem('history'));
+
+    // Use an empty array as the default value
+    papers = papers || [];
+
+    // Convert the object to an array of objects
+    let searchHistory = Object.keys(papers).map(function(key) {
+        return {
+            title: papers[key].title,
+            year: papers[key].year,
+            citationCount: papers[key].citationCount,
+            paperId: papers[key].paperId
+        };
+    });
+
     // Initialize the results table
     let resultsTable = initResultsTable();
+
+    // Initialize the search history table
+    let historyTable = initSearchHistoryTable(searchHistory);
 
     // Enable submit
     function buttonReady() {
@@ -181,8 +185,8 @@ $(document).ready(function() {
         // Fetch & wait for response
         event.preventDefault();
         const formData = new FormData(event.target);
-        // fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
-        fetch('http://crosscheck.app/api/crosscheck', {
+        fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
+        // fetch('http://crosscheck.app/api/crosscheck', {
             method: 'POST',
             body: formData
         })
@@ -213,6 +217,11 @@ $(document).ready(function() {
                 resultsTable.rows.add(response.data)
                             .columns.adjust()
                             .draw();
+            }
+
+            // Update search history
+            if ("source" in response) {
+
             }
         
             // Enable button
