@@ -62,7 +62,7 @@
             </button>
           </div>
           <div class="col-md-auto">
-            <button type="button" class="btn btn-link text-reset" data-bs-toggle="modal" data-bs-target="#historyModal" disabled>
+            <button type="button" class="btn btn-link text-reset" data-bs-toggle="modal" data-bs-target="#historyModal">
               History
             </button>
           </div>
@@ -100,6 +100,39 @@
             <p>
               Icon by Feather
             </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal fade" id="historyModal" tabindex="-1" role="dialog" aria-labelledby="historyModalLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="historyModalLabel">Search History</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <!-- Table -->
+            <table id="historyTable" class="table table-striped table-bordered" style="width:100%">
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>Title</th>
+                  <th>Year</th>
+                  <th>Citation Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Table rows -->
+              </tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="addToGroup1Btn">Add to Group 1</button>
+            <button type="button" class="btn btn-primary" id="addToGroup2Btn">Add to Group 2</button>
           </div>
         </div>
       </div>
