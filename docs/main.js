@@ -99,7 +99,7 @@ function initResultsTable() {
                 "render": function(data, type, row) {
                     var authors = row.authors ? `<br/><small class="text-secondary">${row.authors}</small>` : "";
                     var journal = row.journal ? `&nbsp;<small class="text-secondary">&#8226;</small>&nbsp;<small class="text-secondary">${row.journal}</small>` : "";
-                    return `<a href="${row.url}" class="text-reset">${row.title}</a>${authors}${journal}`;
+                    return `<a href="${row.url}" class="text-reset" target=”_blank”>${row.title}</a>${authors}${journal}`;
                 }
             },
             { "data": "year" },
@@ -107,7 +107,10 @@ function initResultsTable() {
         ],
         // Other options and settings
         "pageLength": 25,
-        "order": [[2, 'desc']]
+        "order": [[2, 'desc']],
+        "language": {
+            "emptyTable": "No data is available in the table"
+        }
     });
 }
 

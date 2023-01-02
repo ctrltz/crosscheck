@@ -94,10 +94,11 @@
       <div class="modal-dialog modal-lg">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5" id="aboutModalLabel">About</h1>
+            <h1 class="modal-title fs-3" id="aboutModalLabel">About</h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
+            <h4>Idea</h4>
             <p>
               The idea behind <strong>crosscheck</strong> is to find scientific papers that are based upon two concepts.
               One of the ways to describe a concept is to select several papers that are quite likely to be cited in a paper that discusses this concept.
@@ -105,13 +106,59 @@
             </p> 
 
             <h4>Usage</h4>
-            <p>
-              TODO
-            </p>
-            
-            <hr>
-            <p>
-              Icon by Feather
+            <ol class="list-group list-group-numbered list-group-flush">
+              <li class="list-group-item">
+                Form two groups of papers by providing their identifiers in the respective input fields. 
+
+                <ul>
+                  <li>
+                    Provide 1 identifier per line
+                  </li>
+                  <li>
+                    The following types of identifiers are currently supported:
+                    
+                    <ul class="text-secondary">
+                      <li><tt>https://pubmed.ncbi.nlm.nih.gov/<strong>PMID</strong>/</tt></li>
+                      <li><tt>doi: <strong>DOI</strong></tt></li>
+                      <li><tt>https://doi.org/<strong>DOI</strong>/</tt></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li class="list-group-item">
+                Click the 'Submit' button. Button label should change to 'Waiting for response...' while the request is being processed.
+              </li>
+              <li class="list-group-item">
+                Once the search is finished, results will be loaded in the table below. 
+                
+                <ul>
+                  <li>
+                    Click on the column names to sort papers according to the title, year or number of citations respectively. The default sort order is decreasing by number of citations.
+                  </li>
+                  <li>
+                    Click on the title of any paper to open it in the new tab.
+                  </li>
+                </ul>
+              </li>
+              <li class="list-group-item">
+                If it was not possible to find any of the paper provided, a warning will appear above the results. 
+
+                <div role="alert" class="alert alert-warning show mt-3">
+                  <strong>Warning!</strong>&nbsp;<span>Failed to find the following paper: <tt>10.20/aaa.30.bbb.40</tt></span>
+                </div>
+              </li>
+              <li class="list-group-item">
+                If the search fails for any reason, the error message describing the cause of the problem will appear.
+
+                <div role="alert" class="alert alert-danger show mt-3">
+                  <strong>Error!</strong>&nbsp;<span>Group <tt>1</tt> is empty</span>
+                </div>
+              </li>
+            </ol>
+          </div>
+          <div class="modal-footer">
+            <p class="text-secondary">
+              Developed by <a href="https://github.com/ctrltz" class="text-reset" target=”_blank”>Nikolai Kapralov</a>, icon by <a href="https://feathericons.com/" class="text-reset" target=”_blank”>Feather</a>
             </p>
           </div>
         </div>
