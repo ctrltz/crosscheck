@@ -4,7 +4,7 @@ import warnings
 
 
 PAPER_URL = 'https://api.semanticscholar.org/graph/v1/paper/{0}?fields={1}'
-PAPER_CITATION_FIELDS = 'citationCount,citations.paperId,citations.citationCount,' + \
+PAPER_CITATION_FIELDS = 'url,title,citationCount,authors,journal,year,citations.citationCount,' + \
     'citations.title,citations.url,citations.authors,citations.journal,citations.year'
 CITATIONS_URL = 'https://api.semanticscholar.org/graph/v1/paper/{0}/citations?fields={1}&offset={2}&limit={3}'
 CITATIONS_FIELDS = 'paperId,url,title,citationCount,authors,journal,year'
@@ -56,6 +56,15 @@ def journal_compact(journal):
     return result
 
 
+def node_metadata(data):
+    return dict(citationCount=data['citationCount'],
+                url=data['url'],
+                title=data['title'],
+                year=data.get('year', ''), 
+                authors=authors_compact(data.get('authors', [])),
+                journal=journal_compact(data.get('journal', {})))
+
+
 def build_graph(groups):
     graph = nx.DiGraph()
     node_groups = []
@@ -86,12 +95,7 @@ def build_graph(groups):
                 print(f'Retrieved {num_cit_actual} / {num_cit_total} citations')
 
             # Add reversed edges to the graph for BFS
-            citation_nodes = [(cit['paperId'], 
-                              dict(citationCount=cit['citationCount'],
-                                   url=cit['url'], title=cit['title'],
-                                   year=cit.get('year', ''), 
-                                   authors=authors_compact(cit.get('authors', [])),
-                                   journal=journal_compact(cit.get('journal', {}))))
+            citation_nodes = [(cit['paperId'], node_metadata(cit))
                               for cit in citations
                               if cit['paperId']]
             citation_edges = [(paper_id, cit['paperId']) 
@@ -100,7 +104,7 @@ def build_graph(groups):
 
             # Add the node and incoming edges to the graph
             nodes.append(paper_id)
-            graph.add_node(paper_id, citationCount=num_cit_total)            
+            graph.add_node(paper_id, **node_metadata(paper_data))            
             graph.add_nodes_from(citation_nodes)
             graph.add_edges_from(citation_edges)
 

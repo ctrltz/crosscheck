@@ -1,5 +1,6 @@
 const classHidden = 'visually-hidden';
 const alertCloseButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
+const searchHistorySize = 25;
 
 function describe(msg) {
     switch (msg.category) {
@@ -56,34 +57,50 @@ function handleSelectedPapers(table, textareaId) {
     });
 }
 
-function initSearchHistoryTable(data) {
+function initSearchHistoryTable() {
     // Initialize the table with DataTables
-    let table = $('#papersTable').DataTable({
+    return $('#historyTable').DataTable({
         // Use the array of objects as the data source for the table
-        "data": data,
+        "data": [],
         // Add a checkbox column to the table
         "columnDefs": [{
-            "targets": 0,
-            "checkboxes": {
-                "selectRow": true
+                "targets": 0,
+                "checkboxes": {
+                    "selectRow": true
+                }
+            },
+            // hide the last column that contains URL of the paper
+            {
+                "targets": 4,
+                visible: false,
             }
-        }, {
-            // Make the paperId column hidden
-            "targets": 4,
-            "className": "d-none"
-        }],
+        ],
+        "columns": [
+            { "data": null },
+            {
+                // The 'Title' column displays the title, authors, and journal in separate elements
+                "data": "title",
+                "render": function(data, type, row) {
+                    var authors = row.authors ? `<br/><small class="text-secondary">${row.authors}</small>` : "";
+                    var journal = row.journal ? `&nbsp;<small class="text-secondary">&#8226;</small>&nbsp;<small class="text-secondary">${row.journal}</small>` : "";
+                    return `<a href="${row.url}" class="text-reset" target=”_blank”>${row.title}</a>${authors}${journal}`;
+                }
+            },
+            { "data": "year" },
+            { "data": "citationCount" },
+            { "data": "url" }
+        ],
         // Display the table with the 'select' extension
         "select": {
             "style": "multi"
         },
         // Other options and settings
         "paging": false,
-        "ordering": false,
-        "info": false,
-        "pageLength": 25
+        "pageLength": searchHistorySize,
+        "language": {
+            "emptyTable": "No data is available in the table"
+        }
     });
-
-    return table;
 }
 
 function initResultsTable() {
@@ -103,7 +120,7 @@ function initResultsTable() {
                 }
             },
             { "data": "year" },
-            { "data": "citationCount" }
+            { "data": "citationCount" },
         ],
         // Other options and settings
         "pageLength": 25,
@@ -114,35 +131,44 @@ function initResultsTable() {
     });
 }
 
+function updateHistory(papers, new_papers) {
+    // TODO: deal with repetitions
+
+    // Add new papers
+    papers.push(...new_papers);
+
+    // Remove the oldest papers
+    while (papers.length > 25) {
+        papers.pop();
+    }
+
+    return papers;
+}
+
 $(document).ready(function() {
     let form = document.getElementById('form');
     let button = document.getElementById('submitButton');
     let spinner = document.getElementById('spinner'); 
     let buttonText = document.getElementById('buttonText');
     let messageDiv = document.getElementById('messages');
-    let responseDiv = document.getElementById('response');
 
     // Retrieve the object from local storage
-    let papers = JSON.parse(localStorage.getItem('history'));
+    let papers = JSON.parse(localStorage.getItem('papers'));
 
     // Use an empty array as the default value
     papers = papers || [];
-
-    // Convert the object to an array of objects
-    let searchHistory = Object.keys(papers).map(function(key) {
-        return {
-            title: papers[key].title,
-            year: papers[key].year,
-            citationCount: papers[key].citationCount,
-            paperId: papers[key].paperId
-        };
-    });
+    console.log({papers});
 
     // Initialize the results table
     let resultsTable = initResultsTable();
 
     // Initialize the search history table
-    let historyTable = initSearchHistoryTable(searchHistory);
+    let historyTable = initSearchHistoryTable();
+    if (papers.length > 0) {
+        historyTable.rows.add(papers)
+                    .columns.adjust()
+                    .draw();
+    }
 
     // Enable submit
     function buttonReady() {
@@ -188,8 +214,8 @@ $(document).ready(function() {
         // Fetch & wait for response
         event.preventDefault();
         const formData = new FormData(event.target);
-        fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
-        // fetch('http://crosscheck.app/api/crosscheck', {
+        // fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
+        fetch('http://crosscheck.app/api/crosscheck', {
             method: 'POST',
             body: formData
         })
@@ -224,7 +250,14 @@ $(document).ready(function() {
 
             // Update search history
             if ("source" in response) {
-
+                console.log('Before:', papers, response.source);
+                papers = updateHistory(papers, response.source);
+                console.log('After:', papers);
+                localStorage.setItem('papers', JSON.stringify(papers));
+                historyTable.clear()
+                            .rows.add(papers)
+                            .columns.adjust()
+                            .draw();
             }
         
             // Enable button
@@ -243,12 +276,9 @@ $(document).ready(function() {
     // Attach action to the submit button
     form.addEventListener('submit', submitForm);
 
-    // Initialize the search history
-    let table = initSearchHistoryTable();
-
     // Handle clicks on the 'Add to Group 1' button
-    $('#addToGroup1Btn').click(handleSelectedPapers(table, '#floatingTextArea'));
+    $('#addToGroup1Btn').click(handleSelectedPapers(historyTable, '#floatingTextArea'));
 
     // Handle clicks on the 'Add to Group 2' button
-    $('#addToGroup2Btn').click(handleSelectedPapers(table, '#floatingTextArea2'));
+    $('#addToGroup2Btn').click(handleSelectedPapers(historyTable, '#floatingTextArea2'));
 });
