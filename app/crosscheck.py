@@ -85,7 +85,7 @@ def build_graph(groups):
             print(paper_doi)
             print(f'Retrieved {num_cit_expected} / {num_cit_total} citations')
             while num_cit_expected < num_cit_total:
-                new_citations = get_citation_data(paper_doi, CITATIONS_FIELDS, num_cit_retrieved)
+                new_citations = get_citation_data(paper_doi, CITATIONS_FIELDS, num_cit_expected)
                 citations.extend([cit['citingPaper'] for cit in new_citations.get('data', [])])
                 num_cit_retrieved = new_citations.get('next', None)
                 num_cit_expected = num_cit_retrieved or num_cit_total
