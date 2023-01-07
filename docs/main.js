@@ -152,6 +152,10 @@ $(document).ready(function() {
     let buttonText = document.getElementById('buttonText');
     let messageDiv = document.getElementById('messages');
 
+    // Enable tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
     // Retrieve the object from local storage
     let papers = JSON.parse(localStorage.getItem('papers'));
 
