@@ -13,6 +13,7 @@ MAX_TOTAL_COUNT = 10000
 # TODO: think about overall limits on the amount of papers to be processed
 
 
+# TODO: throw error only if two groups are empty?
 class EmptyGroupError(Exception):
     pass
 
@@ -65,6 +66,8 @@ def node_metadata(data):
                 journal=journal_compact(data.get('journal', {})))
 
 
+# TODO: add test on more than 1000 citations
+# TODO: decouple paper info from plain citation info, paper info can be loaded later via POST endpoint
 def build_graph(groups):
     graph = nx.DiGraph()
     node_groups = []

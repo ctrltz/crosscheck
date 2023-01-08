@@ -1,6 +1,9 @@
+// TODO: get rid of jquery?
+
 const classHidden = 'visually-hidden';
 const alertCloseButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
 const searchHistorySize = 25;
+const urlColumn = 3;
 
 function describe(msg) {
     switch (msg.category) {
@@ -41,42 +44,20 @@ function constructMessageDiv(type, msg) {
     return div;
 }
 
-// Function to handle the selected papers
-function handleSelectedPapers(table, textareaId) {
-    // Get the selected rows
-    var rows = table.rows({ selected: true }).data();
-  
-    // Extract the paperIds of the selected papers
-    var paperIds = rows.map(function(row) {
-      return row[4]; // The paperId is in the fifth column of the table
-    });
-  
-    // Append the paperIds to the textarea
-    $(textareaId).val(function(i, val) {
-      return val + paperIds.join('\n') + '\n';
-    });
-}
-
 function initSearchHistoryTable() {
     // Initialize the table with DataTables
     return $('#historyTable').DataTable({
         // Use the array of objects as the data source for the table
         "data": [],
         // Add a checkbox column to the table
-        "columnDefs": [{
-                "targets": 0,
-                "checkboxes": {
-                    "selectRow": true
-                }
-            },
+        "columnDefs": [
             // hide the last column that contains URL of the paper
             {
-                "targets": 4,
+                "targets": urlColumn,
                 visible: false,
             }
         ],
         "columns": [
-            { "data": null },
             {
                 // The 'Title' column displays the title, authors, and journal in separate elements
                 "data": "title",
@@ -90,15 +71,12 @@ function initSearchHistoryTable() {
             { "data": "citationCount" },
             { "data": "url" }
         ],
-        // Display the table with the 'select' extension
-        "select": {
-            "style": "multi"
-        },
         // Other options and settings
         "paging": false,
         "pageLength": searchHistorySize,
+        "order": [[0, 'asc']],
         "language": {
-            "emptyTable": "No data is available in the table"
+            "emptyTable": "Search history is empty"
         }
     });
 }
@@ -147,7 +125,11 @@ function updateHistory(papers, new_papers) {
 
 $(document).ready(function() {
     let form = document.getElementById('form');
-    let button = document.getElementById('submitButton');
+    let submitButton = document.getElementById('submitButton');
+    let addGroup1Button = document.getElementById('addToGroup1Btn');
+    let addGroup2Button = document.getElementById('addToGroup2Btn');
+    let group1Textarea = document.getElementById('group1Textarea');
+    let group2Textarea = document.getElementById('group2Textarea');
     let spinner = document.getElementById('spinner'); 
     let buttonText = document.getElementById('buttonText');
     let messageDiv = document.getElementById('messages');
@@ -161,7 +143,6 @@ $(document).ready(function() {
 
     // Use an empty array as the default value
     papers = papers || [];
-    console.log({papers});
 
     // Initialize the results table
     let resultsTable = initResultsTable();
@@ -174,16 +155,46 @@ $(document).ready(function() {
                     .draw();
     }
 
+    // Enable select on rows of history table
+    $('#historyTable tbody').on('click', 'tr', function () {
+        $(this).toggleClass('selected');
+
+        // Enable add button if some papers are selected
+        let countSelected = historyTable.rows('.selected').data().length;
+        if (countSelected > 0) {
+            addGroup1Button.disabled = false;
+            addGroup2Button.disabled = false;
+        } else {
+            addGroup1Button.disabled = true;
+            addGroup2Button.disabled = true;
+        }
+    });
+
+    // Function to handle the selected papers
+    function handleSelectedPapers(textarea) {
+        // Get the selected rows
+        let rows = historyTable.rows('.selected').data();
+        let urls = rows.map((row) => row.url);
+
+        // Append the urls to the textarea if not empty
+        textarea.value = textarea.value + '\n' + urls.join('\n');
+
+        // Reset the selection
+        historyTable.rows('.selected').every( function () {
+            this.node().classList.remove('selected');
+        } );
+    }
+
     // Enable submit
-    function buttonReady() {
-        button.disabled = false;
+    function submitButtonReady() {
+        submitButton.disabled = false;
         spinner.classList.add(classHidden);
         buttonText.innerText = 'Submit';
     }
     
     // Disable submit
-    function buttonBusy() {
-        button.disabled = true;
+    function submitButtonBusy() {
+        submitButton.disabled = true;
         spinner.classList.remove(classHidden);
         buttonText.innerText = 'Waiting for response...'
     }
@@ -197,7 +208,7 @@ $(document).ready(function() {
     // Display the results, warning, and errors for the submitted form
     function submitForm(event) {
         // Disable the button
-        buttonBusy();
+        submitButtonBusy();
     
         // Clear the error log
         messageDiv.replaceChildren();
@@ -211,7 +222,7 @@ $(document).ready(function() {
         if (!isValid) {
             event.preventDefault();
             event.stopPropagation();
-            buttonReady();
+            submitButtonReady();
             return;
         }
     
@@ -265,7 +276,7 @@ $(document).ready(function() {
             }
         
             // Enable button
-            buttonReady();
+            submitButtonReady();
         })
         .catch((error) => {
             console.log(error);
@@ -273,16 +284,18 @@ $(document).ready(function() {
             appendMessage('error', 'Failed due to a network error');
         
             // Enable button
-            buttonReady();
+            submitButtonReady();
         });
     }
 
     // Attach action to the submit button
     form.addEventListener('submit', submitForm);
 
-    // Handle clicks on the 'Add to Group 1' button
-    $('#addToGroup1Btn').click(handleSelectedPapers(historyTable, '#floatingTextArea'));
-
-    // Handle clicks on the 'Add to Group 2' button
-    $('#addToGroup2Btn').click(handleSelectedPapers(historyTable, '#floatingTextArea2'));
+    // Handle clicks on the 'Add to Group 1/2' buttons
+    addGroup1Button.addEventListener('click', function(e) {
+        handleSelectedPapers(group1Textarea);
+    });
+    addGroup2Button.addEventListener('click', function(e) {
+        handleSelectedPapers(group2Textarea);
+    });
 });
