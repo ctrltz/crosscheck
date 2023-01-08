@@ -1,39 +1,41 @@
-# TODO: enable celery
-from celery import Celery
-from flask import Flask, request, make_response
+import os
 
-from app.tasks import analyse
+from celery.result import AsyncResult
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
+from app.celery import celery_app
+from app.tasks import analyze
+
 
 def create_app():
     # Create and configure the app
     app = Flask(__name__)
     app.config.from_mapping(
-        # TODO: get from env
-        SECRET_KEY='dev',
-        CELERY_BROKER_URL='redis://localhost:6379/0',
-        CELERY_BACKEND_URL='redis://localhost:6379/0'
+        SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
+        VERSION=os.environ.get('HEROKU_RELEASE_VERSION', 'local')
     )
-
-    # celery = Celery(app.name, broker=app.config['CELERY_BROKER_URL'])
-    # celery.conf.update(app.config)
-
-    # # Import and register Celery tasks
-    # from app.tasks import tasks
-    # tasks.init_app(app)
-
-    # TODO: progress endpoint for a specific job
+    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     # Main endpoint for initiating a request
     @app.route('/api/crosscheck', methods=['GET', 'POST'])
-    def crosscheck():
+    def submit():
         if request.method == 'POST':
             # Handle form submission
             form_data = request.form
-            # TODO: run the task asynchronously and return job id
-            result, return_code = analyse(form_data)
-            response = make_response(result, return_code)
-            response.headers.add('Access-Control-Allow-Origin', '*')
-            return response
-        return {'message': 'API endpoint of crosscheck.'}
+            task = analyze.delay(form_data)
+            return jsonify({'task_id': task.id}), 202
+        return {'message': 'API endpoint of crosscheck', 'version': app.config['VERSION']}
+
+    # Endpoint for getting the result
+    @app.route('/api/crosscheck/<task_id>', methods=['GET'])
+    def retrieve(task_id):
+        task_result = AsyncResult(task_id, app=celery_app)
+        result = {
+            "task_id": task_id,
+            "task_status": task_result.state,
+            "task_result": task_result.result
+        }
+        return jsonify(result), 200
 
     return app

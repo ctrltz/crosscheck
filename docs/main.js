@@ -4,6 +4,8 @@ const classHidden = 'visually-hidden';
 const alertCloseButton = '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>';
 const searchHistorySize = 25;
 const urlColumn = 3;
+const serverURL = 'https://crosscheck.herokuapp.com/api/crosscheck';
+// const serverURL = 'http://crosscheck.app/api/crosscheck';
 
 function describe(msg) {
     switch (msg.category) {
@@ -205,6 +207,70 @@ $(document).ready(function() {
         messageDiv.append(constructMessageDiv(type, message));
     }
 
+    // Display the results
+    function displayResults(response) {
+        console.log(response);
+
+        // Display warnings
+        response.messages.forEach(m => {
+            appendMessage('warning', m);
+        });
+    
+        // Display error if present
+        if ("error" in response) {
+            let e = response['error'];
+            appendMessage('error', e);
+        }
+
+        // Display data if present
+        if ("data" in response) {
+            resultsTable.rows.add(response.data)
+                        .columns.adjust()
+                        .draw();
+        }
+
+        // Update search history
+        if ("source" in response) {
+            console.log('Before:', papers, response.source);
+            papers = updateHistory(papers, response.source);
+            console.log('After:', papers);
+            localStorage.setItem('papers', JSON.stringify(papers));
+            historyTable.clear()
+                        .rows.add(papers)
+                        .columns.adjust()
+                        .draw();
+        }
+    
+        // Enable button
+        submitButtonReady();
+    }
+
+    // Retrieve the results
+    function retrieveResults(taskID) {
+        fetch(`${serverURL}/${taskID}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+        })
+        .then(response => response.json())
+        .then(response => {      
+            const taskStatus = response.task_status;
+            if (taskStatus === 'SUCCESS' || taskStatus === 'FAILURE') {
+                return displayResults(response.task_result);
+            }
+            setTimeout(function() {
+                retrieveResults(response.task_id);
+            }, 1000);
+        })
+        .catch((error) => {       
+            appendMessage('error', 'Failed due to a network error');
+        
+            // Enable button
+            submitButtonReady();
+        });
+    }
+
     // Display the results, warning, and errors for the submitted form
     function submitForm(event) {
         // Disable the button
@@ -229,58 +295,13 @@ $(document).ready(function() {
         // Fetch & wait for response
         event.preventDefault();
         const formData = new FormData(event.target);
-        // fetch('https://crosscheck.herokuapp.com/api/crosscheck', {
-        fetch('http://crosscheck.app/api/crosscheck', {
+        fetch(serverURL, {
             method: 'POST',
             body: formData
         })
-        .then(response => {
-            if ((response.ok) || (response.status == 400)) {
-                console.log('Parsing JSON');
-                return response.json();
-            } else {
-                throw Error('Internal server error');
-            }
-        })
-        .then(response => {
-            console.log(response);
-        
-            // Display warnings
-            response.messages.forEach(m => {
-                appendMessage('warning', m);
-            });
-        
-            // Display error if present
-            if ("error" in response) {
-                let e = response['error'];
-                appendMessage('error', e);
-            }
-    
-            // Display data if present
-            if ("data" in response) {
-                resultsTable.rows.add(response.data)
-                            .columns.adjust()
-                            .draw();
-            }
-
-            // Update search history
-            if ("source" in response) {
-                console.log('Before:', papers, response.source);
-                papers = updateHistory(papers, response.source);
-                console.log('After:', papers);
-                localStorage.setItem('papers', JSON.stringify(papers));
-                historyTable.clear()
-                            .rows.add(papers)
-                            .columns.adjust()
-                            .draw();
-            }
-        
-            // Enable button
-            submitButtonReady();
-        })
-        .catch((error) => {
-            console.log(error);
-        
+        .then(response => response.json())
+        .then(data => retrieveResults(data.task_id))
+        .catch((error) => {      
             appendMessage('error', 'Failed due to a network error');
         
             // Enable button
