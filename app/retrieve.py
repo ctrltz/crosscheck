@@ -1,3 +1,4 @@
+import logging
 import os
 import requests
 import warnings
@@ -9,6 +10,10 @@ MAX_LIMIT = 1000
 CITATION_FIELDS = ['paperId']
 PAPER_FIELDS = ['paperId', 'url', 'title',
                 'citationCount', 'authors', 'journal', 'year']
+SS_API_KEY = os.environ.get('SS_API_KEY', None)
+AUTH_HEADER = None
+if SS_API_KEY:
+    AUTH_HEADER = {'x-api-key': SS_API_KEY}
 
 
 class PaperNotFoundWarning(Warning):
@@ -44,60 +49,85 @@ def reformat(data):
 
 
 class DataRetriever:
-    def __init__(self) -> None:
-        api_key = os.environ.get('SS_API_KEY', None)
-        self.auth_header = None
-        if api_key:
-            self.auth_header = {'x-api-key': api_key}
+    @staticmethod
+    def paper_url(paper_id, fields):
+        uri = f"{BASE_URL}/paper/{paper_id}?fields={','.join(fields)}"
 
-    def papers_url(self, fields):
+        return uri
+
+    @staticmethod
+    def papers_url(fields):
         uri = f"{BASE_URL}/paper/batch?fields={','.join(fields)}"
 
         return uri
 
-    # TODO: add test on more than 10000 citations
-    def paper_citations_url(self, paper_id, fields, offset=None, limit=MAX_LIMIT):
+    @staticmethod
+    def paper_citations_url(paper_id, fields, offset=None):
+        limit = MAX_LIMIT
         if offset + limit >= MAX_CITATIONS:
             limit = MAX_CITATIONS - offset - 1
 
-        uri = f"{BASE_URL}/paper/{paper_id}/citations/?fields={','.join(fields)}"
+        uri = f"{BASE_URL}/paper/{paper_id}/citations?fields={','.join(fields)}"
         if offset:
-            uri += f'offset={offset}'
+            uri += f'&offset={offset}'
         if limit:
-            uri += f'limit={limit}'
+            uri += f'&limit={limit}'
 
-        return self._get(uri).json()
+        return uri
 
-    def get_paper_data(self, paper_ids, fields):
-        url = self.papers_url(paper_ids, fields)
+    @classmethod
+    def get_paper_data(cls, paper_id, fields=PAPER_FIELDS):
+        logging.info(f'Get paper data: {paper_id} | {len(fields)} field(s)')
+        url = cls.paper_url(paper_id, fields)
 
-        response = self._post(url, {'ids': paper_ids})
+        response = cls._get(url)
+        if response.status_code == 404:
+            logging.warn(f'404 {paper_id} not found')
+            warnings.warn(paper_id, PaperNotFoundWarning)
+            return {}
+        logging.info(f'{response.status_code} {url}')
+
+        return response.json()
+
+    # TODO: split into batches of 1000
+    @classmethod
+    def get_papers_batch(cls, paper_ids, fields=PAPER_FIELDS):
+        logging.info(f'Get papers batch: {len(paper_ids)} | {len(fields)} field(s)')
+        url = cls.papers_url(fields)
+
+        response = cls._post(url, data={'ids': paper_ids})
 
         data = response.json()
-        return reformat(data)
+        return [reformat(paper_data) for paper_data in data]
 
     # TODO: add test on more than 1000 citations
-    def get_citation_data(self, paper_id, fields=CITATION_FIELDS):
+    @classmethod
+    def get_citation_data(cls, paper_id, fields=CITATION_FIELDS):
+        logging.info(f'Get paper citations: {paper_id} | {len(fields)} field(s)')
         offset = 0
         citations = []
 
         while offset is not None:
-            url = self.paper_citations_url(paper_id, fields, offset)
+            url = cls.paper_citations_url(paper_id, fields, offset)
 
-            response = self._get(url)
+            response = cls._get(url)
             if response.status_code == 404:
                 warnings.warn(paper_id, PaperNotFoundWarning)
-                return [], False
+                return []
 
             result = response.json()
             citations.extend([cit['citingPaper']
                              for cit in result.get('data', [])])
             offset = result.get('next', None)
 
-        return citations, True
+        return citations
 
-    def _get(self, url):
-        return requests.get(url, headers=self.auth_header)
+    @staticmethod
+    def _get(url):
+        logging.info(f'GET {url}')
+        return requests.get(url, headers=AUTH_HEADER)
 
-    def _post(self, url, data):
-        return requests.post(url, data=data, headers=self.auth_header)
+    @staticmethod
+    def _post(url, data):
+        logging.info(f"POST {url} | {len(data['ids'])} papers")
+        return requests.post(url, json=data, headers=AUTH_HEADER)

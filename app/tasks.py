@@ -16,15 +16,17 @@ def analyze(form_data):
     with warnings.catch_warnings(record=True) as ws:
         try:
             # Run the analysis
+            logging.info('Starting crosscheck')
             crosschecked, sources = crosscheck(groups)
             source_papers = []
             for g in sources:
                 source_papers.extend(g)
 
             # Retrieve information about the papers
-            dr = DataRetriever()
-            crosschecked_data = dr.get_paper_data(crosschecked)
-            source_data = dr.get_paper_data(source_papers)
+            logging.info('Retrieving data about crosschecked papers')
+            crosschecked_data = DataRetriever.get_papers_batch(crosschecked)
+            logging.info('Retrieving data about source papers')
+            source_data = DataRetriever.get_papers_batch(source_papers)
 
             # Pack the results
             result['data'] = crosschecked_data
@@ -33,7 +35,7 @@ def analyze(form_data):
             result['error'] = {'message': str(e), 'category': 'EmptyGroupError'}
         except Exception as e:
             # Wrap unprocessed exceptions
-            logging.error(str(e))
+            logging.error(f'Exception caught: {str(e)}')
             result['error'] = {'message': [], 'category': 'ServerError'}
 
         # Add warnings that occurred along the way

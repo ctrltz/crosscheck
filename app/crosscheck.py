@@ -1,9 +1,10 @@
+import logging
 import networkx as nx
 
 from app.retrieve import DataRetriever
 
 
-# TODO: think about overall limits on the amount of papers to be processed
+# TODO: think about overall limits on the amount of papers to be processed and returned
 
 
 class EmptyGroupError(Exception):
@@ -11,25 +12,35 @@ class EmptyGroupError(Exception):
 
 
 def build_graph(groups):
-    dr = DataRetriever()
     graph = nx.DiGraph()
     node_groups = []
 
     for group_papers in groups:
         nodes = []
-        for paper_id in group_papers:
+        for paper_link in group_papers:
+            paper = DataRetriever.get_paper_data(paper_link, fields=['paperId'])
+            if not paper:
+                logging.info(f'Paper {paper_link} was not found, continue')
+                continue
+            paper_id = paper['paperId']
+
             # Skip if already in graph
-            if paper_id in graph:
+            if paper_id in nodes:
+                logging.info(f'Paper {paper_id} is already in graph, continue')
                 continue
 
             # Get paper citations
-            citations = dr.get_citation_data(paper_id)
+            citations = DataRetriever.get_citation_data(paper_id)
             if not citations:
+                logging.info(
+                    f'Paper {paper_id} does not have any citations, continue')
                 continue
 
             # Add reversed edges to the graph for BFS
-            citation_nodes = [cit['paperId'] for cit in citations if cit['paperId']]
-            citation_edges = [(paper_id, cit['paperId']) for cit in citations if cit['paperId']]
+            citation_nodes = [cit['paperId']
+                              for cit in citations if cit['paperId']]
+            citation_edges = [(paper_id, cit['paperId'])
+                              for cit in citations if cit['paperId']]
 
             # Add the node and incoming edges to the graph
             nodes.append(paper_id)
@@ -68,12 +79,15 @@ def crosscheck(groups):
     check_groups_not_empty(groups)
 
     # Build the citation graph
+    logging.info('Building the paper graph')
     graph, node_groups = build_graph(groups)
 
     # Throw an error if one of the groups is empty after paper retrieval
     check_groups_not_empty(node_groups)
 
     # Find nodes that are reachable from both sets
+    logging.info('Looking for target papers')
     crosschecked = get_crosschecked_nodes(graph, node_groups)
+    logging.info(f'Found {len(crosschecked)} papers')
 
     return crosschecked, node_groups

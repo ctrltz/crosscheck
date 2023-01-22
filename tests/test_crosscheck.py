@@ -3,7 +3,7 @@ import pytest
 
 from unittest.mock import patch
 
-from app.crosscheck import EmptyGroupError, check_groups_not_empty, crosscheck, get_crosschecked_nodes
+from app.crosscheck import EmptyGroupError, build_graph, check_groups_not_empty, crosscheck, get_crosschecked_nodes
 from app.retrieve import DataRetriever
 
 
@@ -29,16 +29,24 @@ def test_crosscheck_throws_on_empty_group_original():
 
 def test_crosscheck_throws_on_empty_group_after_graph_is_built():
     with pytest.raises(EmptyGroupError) as exc_info:
-        with patch('app.retrieve.DataRetriever.get_citation_data', return_value=[]):
-            dr = DataRetriever()
-            assert not dr.get_citation_data('aaa')
+        with patch('app.retrieve.DataRetriever.get_paper_data', return_value=[]):
+            assert not DataRetriever.get_paper_data('aaa')
             crosscheck([['aaa'], ['bbb']])
     assert str(exc_info.value) == '1'
 
 
-# def test_build_graph():
-#     with patch('app.retrieve.DataRetriever.get_citation_data',
-#                return_value=[{'paperId': 'ccc'}]):
+@patch.object(DataRetriever, 'get_citation_data',
+              return_value=[{'paperId': 'bbb'}, {'paperId': 'ccc'}])
+@patch.object(DataRetriever, 'get_paper_data', return_value={'paperId': 'aaa'})
+def test_build_graph(mock1, mock2):
+    graph, node_groups = build_graph([['aaa']])
+    assert graph.number_of_nodes() == 3
+    assert graph.number_of_edges() == 2
+    assert graph.has_edge('aaa', 'bbb')
+    assert graph.has_edge('aaa', 'ccc')
+    assert node_groups == [['aaa']]
+    mock1.assert_called_once()
+    mock2.assert_called_once()
 
 
 @pytest.mark.parametrize('name,edge_list,node_groups,expected', [
