@@ -13,7 +13,7 @@ from app.preprocess import extract_paper_ids, process_line
     ('doi.org/10.20/aaa.30.bbb.40', 'DOI:10.20/aaa.30.bbb.40'),
     ('dx.doi.org/10.20/aaa.30.bbb.40', 'DOI:10.20/aaa.30.bbb.40'),
     ('https://dx.doi.org/10.20/aaa.30.bbb.40', 'DOI:10.20/aaa.30.bbb.40'),
-    ('https://www.semanticscholar.org/paper/9298bc29443bdfe48bed12456fabd3e8e7af03ed', 
+    ('https://www.semanticscholar.org/paper/9298bc29443bdfe48bed12456fabd3e8e7af03ed',
      '9298bc29443bdfe48bed12456fabd3e8e7af03ed'),
     ('aaaa', 'aaaa')
 ])

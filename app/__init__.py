@@ -15,7 +15,7 @@ def create_app():
         SECRET_KEY=os.environ.get('SECRET_KEY', 'dev'),
         VERSION=os.environ.get('HEROKU_RELEASE_VERSION', 'local')
     )
-    cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/*": {"origins": "*"}})
 
     # Main endpoint for initiating a request
     @app.route('/api/crosscheck', methods=['GET', 'POST'])
