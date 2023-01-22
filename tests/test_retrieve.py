@@ -1,6 +1,10 @@
 import pytest
+import requests
+
+from unittest.mock import patch
 
 from app.retrieve import DataRetriever, authors_compact, journal_compact
+from tests.utils import MockResponse
 
 
 @pytest.mark.parametrize('test_input,expected', [
@@ -47,3 +51,34 @@ def test_dataretriever_papers_url(fields, expected):
 ])
 def test_dataretriever_paper_citations_url(paper_id, fields, offset, expected):
     assert expected in DataRetriever.paper_citations_url(paper_id, fields, offset)
+
+
+@patch.object(requests, 'get')
+def test_dataretriever_get_citation_data(mock):
+    citation_data = [
+        {'offset': 0, 'next': 1000, 'data': [{'citingPaper': {'paperId': 'aaa'}}]},
+        {'offset': 1000, 'next': 2000, 'data': [{'citingPaper': {'paperId': 'bbb'}}]},
+        {'offset': 2000, 'data': [{'citingPaper': {'paperId': 'ccc'}}]},
+    ]
+    mock.side_effect = [MockResponse(cit, 200) for cit in citation_data]
+    citations = DataRetriever.get_citation_data('aaa')
+    assert len(citations) == 3
+    assert [cit['paperId'] for cit in citations] == ['aaa', 'bbb', 'ccc']
+    assert mock.call_count == 3
+
+
+@patch.object(requests, 'post')
+def test_dataretriever_get_papers_batch(mock):
+    paper_data = [
+        [{'paperId': 'aaa', 'authors': [{'name': 'A. Author'}]}],
+        [{'paperId': 'bbb', 'journal': {'name': 'Journal'}}],
+        [{'paperId': 'ccc', 'year': 1234}],
+    ]
+    mock.side_effect = [MockResponse(pd, 200) for pd in paper_data]
+    papers = DataRetriever.get_papers_batch(list(range(1, 3000)))
+    assert len(papers) == 3
+    assert [p['paperId'] for p in papers] == ['aaa', 'bbb', 'ccc']
+    assert [p['authors'] for p in papers] == ['A. Author', '', '']
+    assert [p['journal'] for p in papers] == ['', 'Journal', '']
+    assert [p['year'] for p in papers] == ['', '', 1234]
+    assert mock.call_count == 3

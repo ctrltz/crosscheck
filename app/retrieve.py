@@ -89,18 +89,28 @@ class DataRetriever:
 
         return response.json()
 
-    # TODO: split into batches of 1000
     @classmethod
     def get_papers_batch(cls, paper_ids, fields=PAPER_FIELDS):
         logging.info(f'Get papers batch: {len(paper_ids)} | {len(fields)} field(s)')
         url = cls.papers_url(fields)
 
-        response = cls._post(url, data={'ids': paper_ids})
+        papers = []
+        n_total = len(paper_ids)
+        n_batches = 1 + (n_total - 1) // MAX_LIMIT
+        logging.info(f'{n_total} papers in total, splitting into batches of {MAX_LIMIT}')
+        for i in range(n_batches):
+            s = i * MAX_LIMIT
+            e = min((i + 1) * MAX_LIMIT, n_total)
+            batch_ids = paper_ids[s:e]
+            batch_size = len(batch_ids)
+            logging.info(f'Batch {i + 1} | {batch_size} papers')
+            response = cls._post(url, data={'ids': batch_ids})
 
-        data = response.json()
-        return [reformat(paper_data) for paper_data in data]
+            data = response.json()
+            papers.extend([reformat(paper_data) for paper_data in data])
 
-    # TODO: add test on more than 1000 citations
+        return papers
+    
     @classmethod
     def get_citation_data(cls, paper_id, fields=CITATION_FIELDS):
         logging.info(f'Get paper citations: {paper_id} | {len(fields)} field(s)')
