@@ -33,7 +33,7 @@ def test_update_stats_completed(mock_crosscheck, mock_retriever, **kwargs):
 
 
 @patch.object(DataRetriever, 'get_papers_batch', return_value=[])
-@patch('app.crosscheck.crosscheck', return_value=[[1, 2, 3, 4], [5, 6]], 
+@patch('app.crosscheck.crosscheck', return_value=[[1, 2, 3, 4], [5, 6]],
        side_effect=PaperNotFoundWarning(7))
 @patch.multiple(Pipeline, hincrby=DEFAULT, execute=DEFAULT)
 def test_update_stats_paper_not_found(mock_crosscheck, mock_retriever, **kwargs):

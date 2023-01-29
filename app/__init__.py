@@ -3,7 +3,6 @@ import os
 from celery.result import AsyncResult
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from redis import Redis
 
 from app.celery import celery_app
 from app.redis import redis_app, RedisPapers, RedisRequests
@@ -28,7 +27,7 @@ def create_app():
             task = analyze.delay(form_data)
             return jsonify({'task_id': task.id}), 202
         return {
-            'message': 'API endpoint of crosscheck', 
+            'message': 'API endpoint of crosscheck',
             'version': app.config['VERSION'],
             'requests': redis_app.hgetall(RedisRequests.HASH),
             'papers': redis_app.hgetall(RedisPapers.HASH)

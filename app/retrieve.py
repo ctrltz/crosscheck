@@ -110,7 +110,7 @@ class DataRetriever:
             papers.extend([reformat(paper_data) for paper_data in data])
 
         return papers
-    
+
     @classmethod
     def get_citation_data(cls, paper_id, fields=CITATION_FIELDS):
         logging.info(f'Get paper citations: {paper_id} | {len(fields)} field(s)')

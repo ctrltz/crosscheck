@@ -32,9 +32,7 @@ def build_graph(groups):
             # Get paper citations
             citations = DataRetriever.get_citation_data(paper_id)
             if not citations:
-                logging.info(
-                    f'Paper {paper_id} does not have any citations, continue')
-                continue
+                logging.info(f'Paper {paper_id} does not have any citations')
 
             # Add reversed edges to the graph for BFS
             citation_nodes = [cit['paperId']
