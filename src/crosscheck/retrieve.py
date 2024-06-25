@@ -4,7 +4,7 @@ import requests
 import warnings
 
 
-BASE_URL = 'https://partner.semanticscholar.org/graph/v1'
+BASE_URL = 'https://api.semanticscholar.org/graph/v1'
 MAX_CITATIONS = 10000
 MAX_LIMIT = 1000
 CITATION_FIELDS = ['paperId']

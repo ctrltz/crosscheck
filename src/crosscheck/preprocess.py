@@ -24,13 +24,3 @@ def process_line(line):
             return id_template.format(match.group('id'))
 
     return line
-
-
-def extract_paper_ids(data):
-    return [process_line(el) for el in data.split('\n') if el]
-
-
-def extract_groups(form_data):
-    group1 = extract_paper_ids(form_data['group1'])
-    group2 = extract_paper_ids(form_data['group2'])
-    return [group1, group2]

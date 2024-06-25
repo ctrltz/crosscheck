@@ -3,7 +3,7 @@ import requests
 
 from unittest.mock import patch
 
-from app.retrieve import DataRetriever, authors_compact, journal_compact
+from crosscheck.retrieve import DataRetriever, authors_compact, journal_compact
 from tests.utils import MockResponse
 
 

@@ -1,7 +1,8 @@
 import logging
 import networkx as nx
 
-from app.retrieve import DataRetriever
+from .preprocess import process_line
+from .retrieve import DataRetriever
 
 
 # TODO: think about overall limits on the amount of papers to be processed and returned
@@ -73,6 +74,12 @@ def get_crosschecked_nodes(graph, node_groups):
 
 
 def crosscheck(groups):
+    # Preprocess the input: extract DOI or PMIDs
+    groups = [
+        [process_line(el) for el in g]
+        for g in groups
+    ]
+
     # Throw an error if one of the groups is empty
     check_groups_not_empty(groups)
 

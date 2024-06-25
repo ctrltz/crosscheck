@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "crosscheck"
+version = "0.1"
+authors = [
+    { name="Nikolai Kapralov", email="kapralov@cbs.mpg.de" }
+]
+description = "A search tool for scientific papers combining several ideas/methods/concepts"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "networkx",
+    "requests"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/ctrltz/crosscheck"
+"Bug Tracker" = "https://github.com/ctrltz/crosscheck/issues"
+
+[tool.ruff]
+line-length = 80
+indent-width = 4

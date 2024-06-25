@@ -1,6 +1,6 @@
 import pytest
 
-from app.preprocess import extract_paper_ids, process_line
+from crosscheck.preprocess import process_line
 
 
 @pytest.mark.parametrize("test_input,expected", [
@@ -19,10 +19,3 @@ from app.preprocess import extract_paper_ids, process_line
 ])
 def test_process_line(test_input, expected):
     assert process_line(test_input) == expected
-
-
-@pytest.mark.parametrize("test_input,expected", [
-    ('aaa\n\nbbb', ['aaa', 'bbb'])
-])
-def test_extract_paper_ids(test_input, expected):
-    assert extract_paper_ids(test_input) == expected

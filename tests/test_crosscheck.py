@@ -3,8 +3,8 @@ import pytest
 
 from unittest.mock import patch
 
-from app.crosscheck import EmptyGroupError, build_graph, check_groups_not_empty, crosscheck, get_crosschecked_nodes
-from app.retrieve import DataRetriever
+from crosscheck.crosscheck import EmptyGroupError, build_graph, check_groups_not_empty, crosscheck, get_crosschecked_nodes
+from crosscheck.retrieve import DataRetriever
 
 
 @pytest.mark.parametrize('test_input,expected', [
@@ -29,7 +29,8 @@ def test_crosscheck_throws_on_empty_group_original():
 
 def test_crosscheck_throws_on_empty_group_after_graph_is_built():
     with pytest.raises(EmptyGroupError) as exc_info:
-        with patch('app.retrieve.DataRetriever.get_paper_data', return_value=[]):
+        with patch('crosscheck.retrieve.DataRetriever.get_paper_data', 
+                   return_value=[]):
             assert not DataRetriever.get_paper_data('aaa')
             crosscheck([['aaa'], ['bbb']])
     assert str(exc_info.value) == '1'
