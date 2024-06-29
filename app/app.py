@@ -32,6 +32,10 @@ def add_group():
     st.session_state.groups.append({})
 
 
+def remove_group(group_idx):
+    del st.session_state.groups[group_idx]
+
+
 def add_paper_to_group(group_idx, form):
     paper_id = st.session_state[f'group_{group_idx}_input']
     if not paper_id:
@@ -81,8 +85,15 @@ def display_paper(paper_data, remove=False, remove_args=()):
                       on_click=remove_paper, args=remove_args)
 
 
-def add_group_form(idx):
-    st.header(f"Group {idx+1}", anchor=False)
+def add_group_form(idx, remove=False):
+    if remove:
+        col_header, col_remove = st.columns([0.8, 0.2])
+        col_header.header(f"Group {idx+1}", anchor=False)
+        col_remove.button("Remove", key=f"remove_group_{idx}",
+                        on_click=remove_group, args=(idx,),
+                        use_container_width=True)
+    else:
+        st.header(f"Group {idx+1}", anchor=False)
     form = st.form(f"group_{idx}_form", border=False)
     form.text_input(label='Enter DOI or Pubmed URL of the paper',
                     key=f'group_{idx}_input')
@@ -100,10 +111,12 @@ def main():
     st.title(":bookmark_tabs: crosscheck", anchor=False)
 
     for group_id, group_dict in enumerate(st.session_state.groups):
-        add_group_form(group_id)
+        is_removable = group_id > 1
+        add_group_form(group_id, is_removable)
         for paper_id, paper_data in group_dict.items():
             display_paper(paper_data, remove=True, 
-                        remove_args=(group_id, paper_id))
+                          remove_args=(group_id, paper_id))
+        st.divider()
 
     st.button('Add new group', use_container_width=True, on_click=add_group)
     to_run = st.button('Cross-check!', use_container_width=True, type="primary")
@@ -140,18 +153,25 @@ def main():
             display_paper(paper_data)
     else:
         st.write("Click the 'Cross-check!' button above to start the search "
-                "and get the results.")
+                 "and get the results.")
         
-    st.write("<style>"
-            " a { "
-            "   color: inherit !important;"
-            "   font-size: calc(1.275rem + .3vw);"
-            "   font-weight: 600;"
-            "   line-height: 1.2;"
-            "   text-decoration: none;"
-            " }"
-            "</style>", 
-            unsafe_allow_html=True)
+    st.write("""
+        <style>
+            a {
+                color: inherit !important;
+                font-size: calc(1.275rem + .3vw);
+                font-weight: 600;
+                line-height: 1.2;
+                text-decoration: none;
+            }
+            hr {
+                margin: 0.75rem 0px;
+            }
+            h2 {
+                padding-top: 0rem;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
     if APP_DEBUG:
         st.header('Debug info')
