@@ -22,6 +22,8 @@ SORT_MAPPING = {
         'ascending': True
     }
 }
+PAGE_SIZE = 20
+
 
 @st.cache_data
 def get_paper_data(processed_id):
@@ -129,7 +131,7 @@ def main():
             st.session_state.results = crosschecked_data
 
     if st.session_state.results is not None:
-        col_filter, col_sort = st.columns(2)
+        col_filter, col_sort, col_page = st.columns(3)
         with col_filter:
             pattern = st.text_input('Title contains:')
 
@@ -149,7 +151,28 @@ def main():
             .sort_values(by=sort_params['by'], ascending=sort_params['ascending'])
 
         st.subheader(f"Found {len(crosschecked_df)} paper{'' if len(crosschecked_df) == 1 else 's'}")
-        for paper_data in crosschecked_df.to_dict('records'):
+        
+        # Pagination
+        # source: https://medium.com/streamlit/paginating-dataframes-with-streamlit-2da29b080920
+
+        with col_page:
+            total_pages = (
+                len(crosschecked_df) // PAGE_SIZE +  
+                int(len(crosschecked_df) % PAGE_SIZE > 0)
+            )
+            input_disabled = total_pages == 1
+            current_page = st.number_input(
+                "Page", value=1, disabled=input_disabled,
+                min_value=1, max_value=total_pages, step=1,
+            )
+            start_idx = (current_page - 1) * PAGE_SIZE
+            end_idx = min(len(crosschecked_df), start_idx + PAGE_SIZE)
+        
+        if total_pages > 1:
+            st.markdown(f"Page **{current_page}** of **{total_pages}**, "
+                        f"showing papers **{start_idx+1}**-**{end_idx}**")
+
+        for paper_data in crosschecked_df.to_dict('records')[start_idx:end_idx]:
             display_paper(paper_data)
     else:
         st.write("Click the 'Cross-check!' button above to start the search "
@@ -185,5 +208,4 @@ def main():
 
 
 if __name__ == "__main__":
-    print(APP_DEBUG)
     main()
