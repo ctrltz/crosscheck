@@ -60,17 +60,21 @@ def check_groups_not_empty(groups):
 
 
 def get_crosschecked_nodes(graph, node_groups):
-    crosschecked = set(graph.nodes)
+    candidates = set(graph.nodes)
     for group_nodes in node_groups:
+        # break if at any point the candidate set is empty
+        if not candidates:
+            break
+
         reachable = nx.bfs_layers(graph, group_nodes)
 
         try:
             next(reachable)  # skip group nodes in layer 0
-            crosschecked &= set(next(reachable))
+            candidates &= set(next(reachable))
         except StopIteration:
             # No papers are reachable from one of the groups
             return []
-    return list(crosschecked)
+    return list(candidates)
 
 
 def crosscheck(groups):
