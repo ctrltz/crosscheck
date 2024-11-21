@@ -5,9 +5,6 @@ from .preprocess import process_line
 from .retrieve import DataRetriever
 
 
-# TODO: think about overall limits on the amount of papers to be processed and returned
-
-
 class EmptyGroupError(Exception):
     pass
 

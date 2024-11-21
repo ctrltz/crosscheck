@@ -105,12 +105,78 @@ def add_group_form(idx, remove=False):
 
 
 def main():
+    # Initialize the state
     if "groups" not in st.session_state:
         st.session_state.groups = [{}, {}]
     if "results" not in st.session_state:
         st.session_state.results = None
 
-    st.title(":bookmark_tabs: crosscheck", anchor=False)
+    st.set_page_config(page_title='crosscheck')
+
+    st.title("crosscheck", anchor=False)
+    st.markdown("Search tool for finding scientific papers that combine several concepts (methods, datasets, theories, etc)")
+    with st.expander('**TL;DR:** specify several groups of papers, get all papers that cite at least one from each group'):
+        st.markdown("""
+            #### Idea
+            
+            The idea behind **crosscheck** is to find scientific papers that combined several concepts (methods, topics, ideas, etc).
+            To describe each concept, one can specify a group of papers that are likely to be cited if the concept is discussed.
+            Using a graph-based search, it is possible to find all papers that cite at least one paper from each of the groups 
+            (therefore, hopefully combining all the concepts).
+
+            **DISCLAIMER**: of course, this approach won't work perfectly since citations may have different meaning.
+            Still, it can be a nice alternative to the text-based search for the described use case.
+
+            #### How to use
+
+            1. Form groups of papers by providing their identifiers in the respective input fields. 
+
+                <ul>
+                  <li>
+                    Provide one identifier per line
+                  </li>
+                  <li>
+                    The following types of identifiers are currently supported:
+                    
+                    <ul class="text-secondary">
+                      <li><tt>https://pubmed.ncbi.nlm.nih.gov/<strong>PMID</strong>/</tt></li>
+                      <li><tt>doi: <strong>DOI</strong></tt></li>
+                      <li><tt>https://doi.org/<strong>DOI</strong>/</tt></li>
+                    </ul>
+                  </li>
+                </ul>
+              </li>
+              <li class="list-group-item">
+                Click the 'Submit' button. Button label should change to 'Waiting for response...' while the request is being processed.
+              </li>
+              <li class="list-group-item">
+                Once the search is finished, results will be loaded in the table below. 
+                
+                <ul>
+                  <li>
+                    Click on the column names to sort papers according to the title, year or number of citations respectively. The default sort order is decreasing by number of citations.
+                  </li>
+                  <li>
+                    Click on the title of any paper to open it in the new tab.
+                  </li>
+                </ul>
+              </li>
+              <li class="list-group-item">
+                If it was not possible to find any of the paper provided, a warning will appear above the results. 
+
+                <div role="alert" class="alert alert-warning show mt-3">
+                  <strong>Warning!</strong>&nbsp;<span>Failed to find the following paper: <tt>10.20/aaa.30.bbb.40</tt></span>
+                </div>
+              </li>
+              <li class="list-group-item">
+                If the search fails for any reason, the error message describing the cause of the problem will appear.
+
+                <div role="alert" class="alert alert-danger show mt-3">
+                  <strong>Error!</strong>&nbsp;<span>Group <tt>1</tt> is empty</span>
+                </div>
+              </li>
+        """)
+    st.divider()
 
     for group_id, group_dict in enumerate(st.session_state.groups):
         is_removable = group_id > 1
